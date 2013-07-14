@@ -1,0 +1,15 @@
+#include "main.h"
+#include "pcb.h"
+#include "ksem.h"
+
+KernelSem::KernelSem (int init) {
+	sVal = init;
+}
+
+KernelSem::~KernelSem () {
+	ThreadElem * stari;
+	while (stari = blockedList) {
+		blockedList = blockedList->sled;
+		delete [] stari;
+	}
+}
