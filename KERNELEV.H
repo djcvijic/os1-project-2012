@@ -3,6 +3,7 @@
 
 
 #include "event.h"
+#include "pcb.h"
 
 struct EventElem{
 	KernelEv * kernelEv;
@@ -15,7 +16,7 @@ struct EventElem{
 class KernelEv {
 private:
 	ThreadElem * blockedList;
-	Event * myEvent;
+	//Event * myEvent;
 	IVTNo myIVTNo;
 	
 	static EventElem * eventList;
@@ -27,8 +28,8 @@ private:
 	int wait();
 	void signal();
 	
-public:
-	static Event * getEventByNo (IVTNo ivtNo);
+//public:
+	//static Event * getEventByNo (IVTNo ivtNo);
 };
 
 

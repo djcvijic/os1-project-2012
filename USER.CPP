@@ -6,15 +6,11 @@
 #include <iostream.h>
 #include <stdlib.h>
 
-
+#include "keyevent.h"
 #include "bounded.h"
-#include "intLock.h"
-#include "main.h"
-#include "thread.h"
-#include "pcb.h"
 #include "user.h"
-#include "prekidi.h"
-
+#include "intLock.h"
+#include <event.h>
 
 //---------------------------------------------------------------------------//
 //  Ovo se menja u testu
@@ -33,7 +29,7 @@ class Producer : public Thread {
 public:
 	Producer (BoundedBuffer* bb, TName name, char y, Time time_slice);
 	~Producer() {waitToComplete();}
-
+	static int num;
 protected:
 	virtual void run ();
 	char produce() {return x;}; // Produce an item
@@ -71,9 +67,12 @@ void tick(){
 
 //---------------------------------------------------------------------------//
 
+int Producer::num=0;
+
 Producer::Producer (BoundedBuffer* bb, TName name, char y, Time time_slice) : Thread(name, defaultStackSize, time_slice), 
 																						myBuffer(bb), x(y) {
-																									//ne treba nista
+																									//broj aktivnih proizvodjaca
+																									Producer::num++;
 																						}
 		
 void Producer::run () {
@@ -83,6 +82,7 @@ void Producer::run () {
 		myBuffer->append(d);
 		for(i=0;i<1000;i++);
 	}
+	Producer::num--;
 }
 
 
@@ -102,18 +102,18 @@ void Consumer::run () {
 		char d = myBuffer->take();
 		consume(d);
 		if (i++ == 40) {
-			sleep(92);
+			Thread::sleep(92);
 			i = 0;
 		}else for(j=0;j<200;j++);
 	}
    
-	while (myBuffer->fullCount()){
-		for(j=0;j<200;j++);
+	while (myBuffer->fullCount()||Producer::num){
 		char d = myBuffer->take();
 		consume(d);
+		dispatch();
 	}
 	intLock
-	cout<<endl<<"Happy End";
+	cout<<endl<<"Happy End"<<endl;
 	intUnlock
 }
 
@@ -132,6 +132,7 @@ int userMain (int argc, char* argv[])
 	N = N>19 ? 19 : N;
 	TIME_SLICE = atoi(argv[3]);
 	Producer **pro = new Producer*[N];
+	KeyboardEvent* kev;
 	int i;
 	
 	con = new Consumer(buff);
@@ -144,18 +145,21 @@ int userMain (int argc, char* argv[])
 		pro[i]->start();
 	}
   
+  	kev = new KeyboardEvent(buff);
 	intUnlock
 	
+	kev->start();
 	
 	intLock
 	for (i=0; i<N; i++){
 		delete pro[i];
 	}  
 	delete [] pro;
+	delete kev;
 	delete con;
 
 	cout<<"Kraj userMain"<<endl;
 	intUnlock
-	return 19 + argc - argc;
+	return 0;
 }
 //---------------------------------------------------------------------------//

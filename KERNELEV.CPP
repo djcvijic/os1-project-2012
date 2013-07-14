@@ -5,10 +5,9 @@
 
 EventElem * KernelEv::eventList = NULL;
 
-KernelEv::KernelEv(IVTNo ivtNo, Event event){
+KernelEv::KernelEv(IVTNo ivtNo){
 	lock
 	blockedList = NULL;
-	myEvent = event;
 	myIVTNo = ivtNo;
 	eventList = new EventElem (this, eventList);
 	unlock
@@ -25,7 +24,6 @@ KernelEv::~KernelEv(){
 		}
 		else preth = tek;
 	}
-	delete ivte;
 	signal();
 	unlock
 }
@@ -54,7 +52,7 @@ void KernelEv::signal(){
 	dispatch();
 }
 
-Event * KernelEv::getEventByNo (IVTNo ivtNo) {
+/*Event * KernelEv::getEventByNo (IVTNo ivtNo) {
 	lock
 	Event * retVal = NULL;
 	for (EventElem * tek = eventList; tek; tek = tek->sled) {
@@ -65,4 +63,4 @@ Event * KernelEv::getEventByNo (IVTNo ivtNo) {
 	}
 	unlock
 	return retVal;
-}
+}*/

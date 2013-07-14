@@ -16,6 +16,17 @@ char *strcpy(char *dst, const char *src)
  return(ptr);
 }
 
+int strcmp (const char * src, const char * dst) {
+	int ret = 0 ;
+	while( ! (ret = *(unsigned char *)src - *(unsigned char *)dst) && *dst)
+			++src, ++dst;
+	if ( ret < 0 )
+			ret = -1 ;
+	else if ( ret > 0 )
+			ret = 1 ;
+	return( ret );
+}
+
 void dispatch(){ // sinhrona promena konteksta
 	lock
 	Prekidi::zahtevana_promena_konteksta = 1;
@@ -58,7 +69,7 @@ Thread * Thread::getThreadById(ID id){
 
 ID Thread::getIdOf(TName name){
 	for (ThreadElem * tek = PCB::threadList; tek != NULL; tek = tek->sled) {
-		if (tek->pcb->tName == name) return tek->pcb->tId;
+		if (0 == strcmp(tek->pcb->tName, name)) return tek->pcb->tId;
 	}
 	return NULL;
 }

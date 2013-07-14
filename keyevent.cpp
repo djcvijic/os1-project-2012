@@ -11,6 +11,7 @@
 #include "user.h"
 #include "intLock.h"
 #include <event.h>
+#include "ivte.h"
 
 PREPAREENTRY(9,0);
 

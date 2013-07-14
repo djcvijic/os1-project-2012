@@ -2,13 +2,12 @@
 #define IVTE_H
 
 
-#define PREPAREENTRY(brUl,pozStaru) IVTEntry * ulaz##brUl; \
+#define PREPAREENTRY(brUl,pozStaru) void interrupt prekid##brUl (...); \
+IVTEntry * ulaz##brUl = new IVTEntry ( brUl , prekid##brUl ); \
 void interrupt prekid##brUl (...) { \
 if ( pozStaru ) (*(ulaz##brUl##->getOldRoutine()))(); \
-KernelEv::getEventByNo( brUl )->signal(); \
-} \
-ulaz##brUl = new IVTEntry ( brUl , prekid##brUl );
-
+IVTEntry::events[ brUl ]->signal(); \
+}
 
 #include "event.h"
 
@@ -20,11 +19,15 @@ private:
 	pInterrupt newRoutine;
 	IVTNo myIVTNo;
 
-	IVTEntry(IVTNo ivtNo,pInterrupt routine);
 	~IVTEntry();
-	pInterrupt getOldRoutine();
 	
 	friend class KernelEv;
+	
+public:	
+	static Event ** events;
+
+	pInterrupt getOldRoutine();
+	IVTEntry(IVTNo ivtNo,pInterrupt routine);
 };
 
 

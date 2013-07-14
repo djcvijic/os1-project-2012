@@ -1,12 +1,16 @@
+#include "main.h"
 #include "event.h"
+#include "kernelev.h"
+#include "ivte.h"
 
 Event::Event (IVTNo ivtNo) {
 	lock
-	myImpl = new KernelEv(ivtNo, this);
+	myImpl = new KernelEv(ivtNo);
+	IVTEntry::events[ivtNo] = this;
 	unlock
 }
 
-~Event::Event () {
+Event::~Event () {
 	lock
 	delete myImpl;
 	unlock
