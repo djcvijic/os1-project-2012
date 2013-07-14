@@ -1,45 +1,40 @@
 #include "main.h"
-#include "event.h"
 #include "kernelev.h"
-#include "ivte.h"
-
-EventElem * KernelEv::eventList = NULL;
+#include "pcb.h"
+#include "thread.h"
 
 KernelEv::KernelEv(IVTNo ivtNo){
 	lock
 	blockedList = NULL;
 	myIVTNo = ivtNo;
-	eventList = new EventElem (this, eventList);
 	unlock
 }
 
 KernelEv::~KernelEv(){
 	lock
-	EventElem * preth = NULL;
-	for (EventElem * tek = eventList; tek; tek = tek->sled) {
-		if (myIVTNo == tek->kernelEv->myIVTNo) {
-			if (preth) preth->sled = tek->sled;
-			else eventList = tek->sled;
-			delete tek;
-		}
-		else preth = tek;
-	}
 	signal();
 	unlock
 }
 
 int KernelEv::wait(){
-	lock
-	int retVal = 1;
 	PCB::running->status = ASLEEP;
 	blockedList = new ThreadElem(PCB::running->myThread, (PCB*) PCB::running, blockedList);
 	dispatch();
 	if (PCB::running->status == WOKEN) {
-		retVal = 0;
+		ThreadElem* preth = NULL;
+		for (ThreadElem* tek = blockedList; tek; tek = tek->sled) {
+			if (tek->thread->getId() == PCB::running->tId) {
+				if (preth) preth->sled = tek->sled;
+				else blockedList = tek->sled;
+				delete tek;
+				break;
+			}
+			else preth = tek;
+		}
 		PCB::running->status = RUNNING;
+		return 0;
 	}
-	unlock
-	return retVal;
+	return 1;
 }
 
 void KernelEv::signal(){
@@ -51,16 +46,3 @@ void KernelEv::signal(){
 	}
 	dispatch();
 }
-
-/*Event * KernelEv::getEventByNo (IVTNo ivtNo) {
-	lock
-	Event * retVal = NULL;
-	for (EventElem * tek = eventList; tek; tek = tek->sled) {
-		if (tek->kernelEv->myIVTNo == ivtNo) {
-			retVal = tek->kernelEv->myEvent;
-			break;
-		}
-	}
-	unlock
-	return retVal;
-}*/

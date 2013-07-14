@@ -1,3 +1,4 @@
+#include "main.h"
 #include "thread.h"
 #include "pcb.h"
 #include "prekidi.h"
@@ -9,14 +10,17 @@ void globRun(){
 
 char *strcpy(char *dst, const char *src)
 {
- char *ptr;
- ptr = dst;
- while (*src) *dst++ = *src++;
- *dst = 0;
- return(ptr);
+	lock
+	char *ptr;
+	ptr = dst;
+	while (*src) *dst++ = *src++;
+	*dst = 0;
+	unlock
+	return(ptr);
 }
 
 int strcmp (const char * src, const char * dst) {
+	lock
 	int ret = 0 ;
 	while( ! (ret = *(unsigned char *)src - *(unsigned char *)dst) && *dst)
 			++src, ++dst;
@@ -24,6 +28,7 @@ int strcmp (const char * src, const char * dst) {
 			ret = -1 ;
 	else if ( ret > 0 )
 			ret = 1 ;
+	unlock
 	return( ret );
 }
 
@@ -41,15 +46,24 @@ void Thread::start(){
 }
 
 int Thread::waitToComplete(){
-	return myPCB->waitToComplete();
+	lock
+	int retVal = myPCB->waitToComplete();
+	unlock
+	return retVal;
 }
 
 int Thread::wakeUp(){
-	return myPCB->wakeUp();
+	lock
+	int retVal = myPCB->wakeUp();
+	unlock
+	return retVal;
 }
 
 int Thread::sleep(Time timeToSleep){
-	return PCB::sleep(timeToSleep);
+	lock
+	int retVal = PCB::sleep(timeToSleep);
+	unlock
+	return retVal;
 }
 
 ID Thread::getId(){
@@ -61,16 +75,26 @@ TName Thread::getName(){
 }
 
 Thread * Thread::getThreadById(ID id){
+	lock
 	for (ThreadElem * tek = PCB::threadList; tek != NULL; tek = tek->sled) {
-		if (tek->pcb->tId == id) return tek->thread;
+		if (tek->pcb->tId == id) {
+			unlock
+			return tek->thread;
+		}
 	}
+	unlock
 	return NULL;
 }
 
 ID Thread::getIdOf(TName name){
+	lock
 	for (ThreadElem * tek = PCB::threadList; tek != NULL; tek = tek->sled) {
-		if (0 == strcmp(tek->pcb->tName, name)) return tek->pcb->tId;
+		if (0 == strcmp(tek->pcb->tName, name)) {
+			unlock
+			return tek->pcb->tId;
+		}
 	}
+	unlock
 	return NULL;
 }
 
@@ -93,8 +117,10 @@ Thread::Thread (TName name,StackSize stackSize,Time timeSlice){
 	myPCB->tName = newName;
 	myPCB->createProcess(globRun, stackSize);
 	PCB::threadList = new ThreadElem(this, myPCB, PCB::threadList);
+	/*
 	lockCout
 	cout<<"napravio "<<myPCB->tName<<" id = "<<myPCB->tId<<endl;
 	unlockCout
+	*/
 	unlock
 }

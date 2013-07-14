@@ -4,8 +4,7 @@
 #include "main.h"
 #include "thread.h"
 
-
-//void exitThread();
+enum PCBStatus { READY, QUEUED, RUNNING, ASLEEP, WOKEN, FINISHED };
 
 struct ThreadElem{
 	Thread * thread;
@@ -27,7 +26,7 @@ class PCB{
 	PCB * awaitedThread;
 	TName tName;
 	ID tId;
-	PCBStatus status;
+	volatile PCBStatus status;
 	unsigned * stack;
 	
 	friend class Thread;

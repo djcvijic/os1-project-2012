@@ -17,7 +17,10 @@ Event::~Event () {
 }
 
 int Event::wait() {
-	return myImpl->wait();
+	lock
+	int retVal = myImpl->wait();
+	unlock
+	return retVal;
 }
 
 void Event::signal() {

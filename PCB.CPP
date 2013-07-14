@@ -29,8 +29,8 @@ PCB::PCB (Thread *thr, Time slice){
 }
 
 PCB::~PCB () {
-	ThreadElem * stari = NULL;
 	lock
+	ThreadElem * stari = NULL;
 	for (ThreadElem * tek = PCB::threadList; tek != NULL; tek = tek->sled) {
 		if (tek->pcb->tId == tId) {
 			if (stari) stari->sled = tek->sled;
@@ -68,44 +68,33 @@ void PCB::start () {
 
 int PCB::waitToComplete() {
 	if ((status == FINISHED) || (status == READY)) return 1;
-	lock
 	running->awaitedThread = this;
 	running->status = ASLEEP;
-	unlock
 	dispatch();
-	lock
 	int retValue = (running->status == WOKEN) ? 0 : 1;
 	running->status = RUNNING;
-	unlock
 	return retValue;
 }
 
 int PCB::wakeUp() {
-	lock
 	if (status != ASLEEP) {
-		unlock
 		return 0;
 	}
 	else {
 		status = WOKEN;
-		unlock
 		return 1;
 	}
 }
 
 int PCB::sleep(Time tts) {
-	lock
 	if (tts == 0) {
-		unlock
+		dispatch();
 		return 1;
 	}
 	running->status = ASLEEP;
 	running->timeToSleep = tts;
-	unlock
 	dispatch();
-	lock
 	int retValue = (running->status == WOKEN) ? 0 : 1;
 	running->status = RUNNING;
-	unlock
 	return retValue;
 }

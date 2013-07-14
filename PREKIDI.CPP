@@ -101,15 +101,14 @@ void interrupt timer(...){	// prekidna rutina
 	  else Prekidi::zahtevana_promena_konteksta = 1;
 
 	}
-
-	//Prekidi::zahtevana_promena_konteksta = 0; - sada se menja u zavisnosti od Prekidi::lockFlag-a
 } //timer
 
 // postavlja novu prekidnu rutinu
 void Prekidi::inic(){
 
+	lock
 	asm{
-		cli
+		
 		push es
 		push ax
 
@@ -131,15 +130,17 @@ void Prekidi::inic(){
 
 		pop ax
 		pop es
-		sti
+		
 	}
+	unlock
 }
 
 // vraca staru prekidnu rutinu
 void Prekidi::restore(){
 
+	lock
 	asm {
-		cli
+		
 		push es
 		push ax
 
@@ -154,6 +155,7 @@ void Prekidi::restore(){
 
 		pop ax
 		pop es
-		sti
+		
 	}
+	unlock
 }

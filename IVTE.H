@@ -21,8 +21,6 @@ private:
 
 	~IVTEntry();
 	
-	friend class KernelEv;
-	
 public:	
 	static Event ** events;
 

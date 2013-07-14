@@ -4,7 +4,6 @@
 #include "thread.h"
 
 int KernelSem::wait(){
-	lock
 	int retVal = 1;
 	if (--sVal < 0) {
 		PCB::running->status = ASLEEP;
@@ -12,18 +11,28 @@ int KernelSem::wait(){
 		dispatch();
 	}
 	if (PCB::running->status == WOKEN) {
-		retVal = 0;
+		sVal++;
+		ThreadElem* preth = NULL;
+		for (ThreadElem* tek = blockedList; tek; tek = tek->sled) {
+			if (tek->thread->getId() == PCB::running->tId) {
+				if (preth) preth->sled = tek->sled;
+				else blockedList = tek->sled;
+				delete tek;
+				break;
+			}
+			else preth = tek;
+		}
 		PCB::running->status = RUNNING;
+		retVal = 0;
 	}
 	if (semPreempt) dispatch();
-	unlock
 	return retVal;
 }
 
 void KernelSem::signal(){
 	if (sVal++ < 0) {
 		ThreadElem *preth = NULL;
-		ThreadElem *tek = blockedList;
+		ThreadElem *tek = blockedList; // posto je sVal bio < 0, ovo nikad nije NULL
 		for (; tek->sled; tek = tek->sled) {
 			preth = tek;
 		}

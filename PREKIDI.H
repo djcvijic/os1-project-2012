@@ -2,7 +2,7 @@
 #define PREKIDI_H
 
 
-#include "main.h"
+#include "thread.h"
 
 void tick();
 

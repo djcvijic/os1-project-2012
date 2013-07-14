@@ -1,7 +1,5 @@
 #include "semaphor.h"
 #include "ksem.h"
-#include "pcb.h"
-#include "thread.h"
 
 Semaphore::Semaphore (int init) {
 	lock
@@ -16,7 +14,10 @@ Semaphore::~Semaphore () {
 }
 
 int Semaphore::wait() {
-	return myImpl->wait();
+	lock
+	int retVal = myImpl->wait();
+	unlock
+	return retVal;
 }
 
 void Semaphore::signal() {
@@ -26,5 +27,8 @@ void Semaphore::signal() {
 }
 
 int Semaphore::val() const {
-	return myImpl->val();
+	lock
+	int retVal = myImpl->val();
+	unlock
+	return retVal;
 }
