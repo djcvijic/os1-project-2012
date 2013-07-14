@@ -165,7 +165,6 @@ int main (int argc, char* argv[]){
 	PCB::running = new PCB(NULL, 0);
 	PCB::running->tName = "MAIN";
 	PCB::running->status = RUNNING;
-	PCB::running->tId = 0;
 	UserThread *userThread = new UserThread ("USERMAIN", 4096, 2, argc, argv);
 	userThread->start();
 	unlock

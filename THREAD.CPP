@@ -16,55 +16,29 @@ char *strcpy(char *dst, const char *src)
  return(ptr);
 }
 
+void dispatch(){ // sinhrona promena konteksta
+	lock
+	Prekidi::zahtevana_promena_konteksta = 1;
+	timer();
+	unlock
+}
+
 void Thread::start(){
 	lock
-	Scheduler::put(myPCB);
-	myPCB->status = QUEUED;
+	myPCB->start();
 	unlock
 }
 
 int Thread::waitToComplete(){
-	if ((myPCB->status == FINISHED) || (myPCB->status == READY)) return 1;
-	lock
-	PCB::running->awaitedThread = myPCB;
-	PCB::running->status = ASLEEP;
-	unlock
-	dispatch();
-	lock
-	int retValue = (PCB::running->status == WOKEN) ? 0 : 1;
-	PCB::running->status = RUNNING;
-	unlock
-	return retValue;
+	return myPCB->waitToComplete();
 }
 
 int Thread::wakeUp(){
-	lock
-	if (myPCB->status != ASLEEP) {
-		unlock
-		return 0;
-	}
-	else {
-		myPCB->status = WOKEN;
-		unlock
-		return 1;
-	}
+	return myPCB->wakeUp();
 }
 
 int Thread::sleep(Time timeToSleep){
-	lock
-	if (timeToSleep == 0) {
-		unlock
-		return 1;
-	}
-	PCB::running->status = ASLEEP;
-	PCB::running->timeToSleep = timeToSleep;
-	unlock
-	dispatch();
-	lock
-	int retValue = (PCB::running->status == WOKEN) ? 0 : 1;
-	PCB::running->status = RUNNING;
-	unlock
-	return retValue;
+	return PCB::sleep(timeToSleep);
 }
 
 ID Thread::getId(){
@@ -95,11 +69,8 @@ Thread::~Thread(){
 
 Thread::Thread (TName name,StackSize stackSize,Time timeSlice){
 	lock
-
 	myPCB = new PCB(this,timeSlice);
-	myPCB->tId = ++statID;
 	char* newName = new char[12];
-	
 	if (name) {
 		strcpy (newName, name);
 	}
@@ -109,16 +80,10 @@ Thread::Thread (TName name,StackSize stackSize,Time timeSlice){
 		strcpy (newName + 6, toAppend);
 	}
 	myPCB->tName = newName;
-	myPCB->status = READY;
 	myPCB->createProcess(globRun, stackSize);
 	PCB::threadList = new ThreadElem(this, myPCB, PCB::threadList);
-	cout<<"napravio "<<myPCB->tName<<" id= "<<myPCB->tId<<endl;
-	unlock
-}
-
-void dispatch(){ // sinhrona promena konteksta
-	lock
-	Prekidi::zahtevana_promena_konteksta = 1;
-	timer();
+	lockCout
+	cout<<"napravio "<<myPCB->tName<<" id = "<<myPCB->tId<<endl;
+	unlockCout
 	unlock
 }

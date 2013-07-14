@@ -3,6 +3,15 @@
 
 ThreadElem * PCB::threadList = NULL;
 volatile PCB* PCB::running = NULL;
+ID PCB::statID = 0;
+
+void PCB::run() volatile {
+	myThread->run();
+	lock
+	PCB::running->status = FINISHED;
+	dispatch();
+	unlock
+}
 
 TName PCB::getTName () volatile {
 	return tName;
@@ -10,8 +19,10 @@ TName PCB::getTName () volatile {
 
 PCB::PCB (Thread *thr, Time slice){
 	lock
+	tId = statID++;
 	myThread = thr;
 	kvant = slice;
+	status = READY;
 	timeToSleep = 0;
 	awaitedThread = NULL;
 	unlock
@@ -50,15 +61,51 @@ void PCB::createProcess(void (*body)(), StackSize stackSize){
 	stack = st1;
 }
 
-void PCB::run() volatile {
-	myThread->run();
-	lock
-	PCB::running->status = FINISHED;
-	dispatch();
-	unlock
+void PCB::start () {
+	Scheduler::put(this);
+	status = QUEUED;
 }
 
-/*void exitThread(){
-	PCB::running->status = FINISHED;
+int PCB::waitToComplete() {
+	if ((status == FINISHED) || (status == READY)) return 1;
+	lock
+	running->awaitedThread = this;
+	running->status = ASLEEP;
+	unlock
 	dispatch();
-}*/
+	lock
+	int retValue = (running->status == WOKEN) ? 0 : 1;
+	running->status = RUNNING;
+	unlock
+	return retValue;
+}
+
+int PCB::wakeUp() {
+	lock
+	if (status != ASLEEP) {
+		unlock
+		return 0;
+	}
+	else {
+		status = WOKEN;
+		unlock
+		return 1;
+	}
+}
+
+int PCB::sleep(Time tts) {
+	lock
+	if (tts == 0) {
+		unlock
+		return 1;
+	}
+	running->status = ASLEEP;
+	running->timeToSleep = tts;
+	unlock
+	dispatch();
+	lock
+	int retValue = (running->status == WOKEN) ? 0 : 1;
+	running->status = RUNNING;
+	unlock
+	return retValue;
+}

@@ -29,14 +29,23 @@ class PCB{
 	ID tId;
 	PCBStatus status;
 	unsigned * stack;
+	
 	friend class Thread;
-	friend class Semaphore;
+	friend class KernelSem;
+	friend class KernelEv;
 	friend void interrupt timer(...);
 	friend void exitThread();
 	friend int main (int argc, char* argv[]);
+	
+	void start();
+	int waitToComplete();
+	int wakeUp();
+	static int sleep(Time tts);
+	
 public:
 	static ThreadElem * threadList;
 	static volatile PCB* running;
+	static ID statID;
 	TName getTName () volatile;
 	PCB (Thread * thr = NULL, Time slice = 2);
 	~PCB ();

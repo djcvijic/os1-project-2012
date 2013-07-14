@@ -2,10 +2,6 @@
 #define SEMAPHOR_H
 
 
-#include "main.h"
-
-extern int semPreempt;
-
 class KernelSem;
 
 class Semaphore {
